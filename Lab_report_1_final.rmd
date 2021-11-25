@@ -1,0 +1,202 @@
+---
+title: 'Lab Report 3'
+author: "Yvone Yang, Natalie Tam, Fares Alhatabeh"
+geometry: margin=.75in
+output:
+  pdf_document: default
+  word_document: default
+  html_document:
+    df_print: paged
+    theme: cosmo
+header-includes:
+- \usepackage{graphicx}
+- \usepackage{color}
+graphics: yes
+fontsize: 11pt
+---
+
+
+### 1. Histogram & Density
+
+
+```{r}
+## Read data here
+spotify <- read.csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-01-21/spotify_songs.csv', header = TRUE)
+
+# ...
+
+## call tidyverse and any other library you'll need ( you can call later if you want ) 
+library('tidyverse')
+
+
+## Set theme to something else (optional)
+theme_set(theme_minimal())
+```
+
+Q1. 
+
+- By calling str(spotify), we can see that the dataset has 32833 observations.
+  
+  - There are 23 variables.
+  
+  - 13 are numerical (denoted by datatype num or int) and 10 are categorical (denoted by datatype char) variables.
+  
+  - There is not any categorical variable treated as a numerical variable in this dataset.
+  
+- Mode and Key columns are converted into factors because they are categorical variables treated as numeric variables. 
+
+- Numerical Variable: spotify$speechiness
+
+- Categorical Variable: spotify$playlist_genre
+
+
+```{r}
+str(spotify)
+
+spotify$key <- as.factor(spotify$key)
+spotify$mode <- as.factor(spotify$mode)
+
+# Q1-1
+ggplot(spotify, aes(x = speechiness)) + 
+  geom_histogram(fill=adjustcolor('firebrick',.7), color='white') + 
+  theme_classic() + 
+  xlim(c(0, 1)) +
+  ggtitle('Distribution of Speechiness')
+
+```
+
+
+> Your comment about the histogram here 
+
+By observing the speechiness histogram, the distribution is right skewed meaning most songs are not very speechy. There does not seem to be many songs that have higher speechiness score than 0.5. The density of songs exponentially decreases as speechiness increases.
+
+```{r}
+#Q1-2
+ggplot(spotify) + 
+  geom_histogram(data= subset(spotify, playlist_genre == 'pop'), 
+                 aes(x = log(speechiness), y = ..count..), 
+                 fill="firebrick", colour='white') + 
+  geom_histogram(data= subset(spotify, playlist_genre == 'rap'), 
+                 aes(x = log(speechiness), y = -..count..), 
+                 fill= "steelblue", colour='white') +
+  ggtitle('Back2back Density Plot') + 
+  annotate('text', x = -0.5, y = 400, label='Pop') +
+  annotate('text', x = -0.5, y = -400, label='Rap') 
+
+```
+
+> Your comment about moments here 
+
+Q1-2
+The values speechiness is on a logarithmic scale for better readability.
+
+By comparing the density of speechiness between songs from the pop and rap genre, we see that pop songs tend to have lower speechiness score while rap songs have higher speechiness scores.
+
+The density of Pop songs are right skewed and the density of Rap songs are left skewed. 
+
+This makes sense because rappers tend to speak a lot of words very quickly in comparision to pop artists. 
+
+
+\pagebreak
+
+### 2. Boxplot
+
+```{r}
+#Q2-1
+categories <- unique(spotify$playlist_genre)
+medians <- sapply(categories, function(z) 
+  median(spotify$speechiness[spotify$playlist_genre == z]))
+ord <- order(medians)
+
+spotify$playlist_genre <- factor(spotify$playlist_genre, levels = categories[ord])
+
+ggplot(spotify, aes(x = speechiness, y = playlist_genre)) + 
+  geom_jitter(alpha=0.2, color = "light blue") +
+  geom_boxplot(outlier.alpha = 0) + 
+  theme_classic() + xlim(c(0, 1)) +
+  ggtitle('Boxplot of Speechiness')
+
+
+#Q2-2
+library('ggridges')
+ggplot(spotify, aes(y=playlist_genre, x=speechiness, fill=playlist_genre)) +
+  geom_density_ridges() +
+  theme_minimal() +
+  theme(legend.position = 'none')
+
+
+```
+
+> Your comment here
+
+Songs in the rap playlist genre tend to have a wide spread of speechiness and the highest average speechiness. 
+
+All other categories (everything but rap) have relatively similar/close in terms of speechiness, with most hovering around a score of 0.05.  
+
+Sorting by the speechiness medium, we see that Rap caegory has the highest speechiness medium value, followed by r&b, then latin, then edm, then pop, then rock. 
+
+Rock song speechiness has low variability and rap song speechiness has very high variability (as observed by the length of the boxplot box).
+
+
+\pagebreak
+
+### 3. Aggregating Data
+
+```{r}
+spotify %>%
+  
+  select(playlist_genre, key)%>%
+  group_by(playlist_genre, key)%>%
+  arrange(key)%>%
+  summarize(Number_of_Songs = n())
+  
+```
+
+
+\pagebreak
+
+### 4. Visualizing Categorical Variables
+```{r}
+count = spotify%>%
+  select(playlist_genre, key)%>%
+  group_by(playlist_genre, key)%>%
+  summarize(Number_of_Songs = n())%>%
+  arrange(key)
+  
+ggplot(count, aes(y = playlist_genre, x = Number_of_Songs, fill = key))+
+  geom_bar(stat = "identity", position='dodge')
+
+```
+
+```{r}
+count = spotify%>%
+  select(playlist_genre, key)%>%
+  group_by(playlist_genre, key)%>%
+  summarize(Number_of_Songs = n())%>%
+  arrange(key)
+  
+ggplot(count, aes(y = playlist_genre, x = Number_of_Songs, fill = key))+
+  geom_bar(stat = "identity", position ='fill')
+
+```
+
+
+
+
+
+
+
+
+\pagebreak
+
+### 5. Other Visuals
+
+```{r}
+playlistGenres <- group_by(spotify, playlist_genre, mode) %>% summarise(num = n())
+
+ggplot(playlistGenres) +
+      geom_col(aes(x = 1, y = num, fill = mode), position = "fill") +
+      facet_wrap( ~ playlist_genre) + 
+      coord_polar(theta = "y") +
+      scale_fill_manual(name="", values = c("firebrick","#007ea1"))
+```
