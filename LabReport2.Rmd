@@ -1,0 +1,76 @@
+---
+title: "Lab Report 2"
+author: "Natalie Tam"
+date: "30/06/2021"
+output:
+  pdf_document: default
+  html_document: default
+---
+Data that we wil use is `earthquakes`:
+```{r}
+spotify <- read.csv('data/spotify_songs.csv')
+library(ggplot2)
+library(tidyverse)
+```
+
+```{r}
+g1 <- ggplot(spotify) + geom_histogram(aes(x=danceability), bins=30, 
+                                colour='white ', fill="#00AFBB")
+g1
+```
+The graph is left skewed. Because we are using a histogram, we cannot locate the median, first, and third quartiles. The distribution has irregular thick tails because it is more condensed in the center. 
+
+``` {r}
+ggplot(spotify) + 
+  geom_histogram(aes(y=danceability, x = -..density..), alpha = .7, colour = 'white', bins=20, fill="#00AFBB") +
+  geom_point(aes(y=sort(danceability), x=ppoints(danceability)), colour='firebrick', alpha = .2, size =3 ) +
+  geom_boxplot(aes(y=danceability,x = 1.25), width=.25)  + 
+  labs(x='Probability Points', y='Danceability')
+```
+
+The distribution is left-skewed because the points are sparse at the bottom and flatter at the top. The median is approximately 0.68, the first quartile is approximtely 0.55, and the third quartile is approximately 0.76
+
+```{r}
+library('moments')
+fourmoments <- function(rv){
+  c('Mean' = mean(rv), 
+    'Variance' = var(rv),
+    'Skewness' = skewness(rv),
+    'Kurtosis' = kurtosis(rv))
+}
+
+fourmoments(spotify$danceability)
+```
+Since the skew level is negative, the graph is left skewed. Since the kurtosis value is positive, it is leptokurtic. 
+\newpage
+
+Question 2
+
+```{r}
+library('qqtest')
+library('plotly')
+
+ggplot(data = spotify) + 
+  geom_histogram(aes(y=danceability, x = -..density..), alpha = .7, colour = 'white', bins=20, fill = 'darkslategray2') +
+  labs(x='Probability Points', y='Sample Quantile')
+
+qqtest((spotify$danceability),dist = 'normal')
+qqtest((spotify$danceability),dist = 'log-normal')
+qqtest((spotify$danceability),dist = 'chi-squared')
+qqtest((spotify$danceability),dist = 'exponential')
+
+series   <- tail(spotify$danceability, 3000) 
+rate <- 1/mean(series)
+probs    <- ppoints(series) # the same x axis for both
+q.exp    <- qexp(probs, rate)
+q.sample <- sort(series)
+
+g2 <- ggplot(tail(spotify,3000)) +
+  geom_point(aes(y = q.sample, x=probs), colour = 'firebrick', alpha=.2) +
+  geom_line(aes(y = q.exp, x=probs))
+  labs(x='Probability Points', y = 'Sample Quantities')
+
+g2
+```
+
+

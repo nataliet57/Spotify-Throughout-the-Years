@@ -1,0 +1,19 @@
+---
+title: 'Lab 1: Data Visualization'
+author: "Natalie Tam"
+date: "13/05/2021"
+output: pdf_document
+---
+
+```{r, warning=F, message=F}
+library('tidyverse')
+```
+
+```{r}
+provinces <- read.csv('data/provinces.csv') # by default it expects , to separate columns
+head(provinces)
+```
+
+```{r}
+dim(provinces)
+```

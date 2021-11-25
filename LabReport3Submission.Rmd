@@ -1,0 +1,32 @@
+---
+title: "Lab Report 3 Submission"
+author: "Natalie Tam"
+date: "21/07/2021"
+output: pdf_document
+---
+```{r}
+spotify <- read.csv('data/spotify_songs.csv')
+library(ggplot2)
+library('qqtest')
+library(tidyverse)
+```
+
+
+```{r}
+ggplot(spotify, aes(x=danceability)) + 
+  geom_histogram(colour='white')
+
+set.seed(156)
+
+Xbars <- sapply(1:300, function(i) mean(spotify$danceability[sample(1:nrow(spotify), 200)]))
+Xbars <- data.frame(1:length(Xbars), Xbars)
+colnames(Xbars) <- c('GroupID', 'Xbar')
+Xbars
+
+ggplot(Xbars, aes(x=Xbar)) + 
+  geom_histogram(colour='white')
+
+qqtest(Xbars$Xbar) 
+
+```
+The magic works because the qqtest is normal
